@@ -55,8 +55,8 @@ data(segdata, package = "OasisR")
 # segdata - theoretical distributions on a 10x10 grid map
 # We consider A1 and A2 - two populations distribution and
 # the amenities are located in the grid center
-distance <- rgeos::gDistance(rgeos::gCentroid(segdata, byid = FALSE),
-rgeos::gCentroid(segdata, byid = TRUE), byid = TRUE)
+distance <- sf::st_distance(sf::st_centroid(sf::st_as_sf(segdata)),
+sf::st_centroid(sf::st_union(sf::st_as_sf(segdata))))
 ECfunc (segdata@data[,3:4], dist = distance)
 }
 \references{

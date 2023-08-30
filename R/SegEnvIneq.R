@@ -1,8 +1,7 @@
 library(OasisR)
 library(spdep)
 library(outliers)
-library(rgdal)
-library(rgeos)
+library(sf)
 
 
 ################################
@@ -84,83 +83,103 @@ library(rgeos)
 
 
 
-EDfunc <- function(x, a, vers = "standard", w = NULL, ar = NULL, per = NULL, b = NULL,
-                   folder = NULL, shape = NULL, spatobj = NULL,
-                   queen = TRUE, ptype = "int", K = 1, f = "exp", beta = 1) {
-  if (vers == "standard") return(0.5 * sum(abs((x/sum(x)) - (a/sum(a)))))
+EDfunc <- function (x, a, vers = "standard", w = NULL, ar = NULL, per = NULL,
+                    b = NULL, folder = NULL, shape = NULL, spatobj = NULL, queen = TRUE,
+                    ptype = "int", K = 1, f = "exp", beta = 1)
+{
+  if (vers == "standard")
+    return(0.5 * sum(abs((x/sum(x)) - (a/sum(a)))))
   if ((K == 1 & vers == "contig") | vers == "user") {
-    if (is.null(w)) w <- OasisR::contig(spatobj = spatobj, folder = folder, shape = shape, queen = queen)
-    xsmat <- matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE) /
-      (matrix(rep(t(x), length(x)), nrow = length(x), byrow = TRUE) +
-         matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE))
-    asmat <-  matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE) /
-      (matrix(rep(t(a), length(a)), nrow = length(a), byrow = TRUE) +
-         matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE))
-    smat <- w * abs(xsmat-asmat)
+    if (is.null(w))
+      w <- OasisR::contig(spatobj = spatobj, folder = folder, shape = shape, queen = queen)
+    xsmat <- matrix(rep(t(x), length(x)), nrow = length(x),
+                    byrow = FALSE)/(matrix(rep(t(x), length(x)), nrow = length(x),
+                                           byrow = TRUE) + matrix(rep(t(x), length(x)), nrow = length(x),
+                                                                  byrow = FALSE))
+    asmat <- matrix(rep(t(a), length(a)), nrow = length(a),
+                    byrow = FALSE)/(matrix(rep(t(a), length(a)), nrow = length(a),
+                                           byrow = TRUE) + matrix(rep(t(a), length(a)), nrow = length(a),
+                                                                  byrow = FALSE))
+    smat <- w * abs(xsmat - asmat)
     smat[is.na(smat)] <- 0
     return((0.5 * sum(abs((x/sum(x)) - (a/sum(a))))) - sum(smat)/sum(w))
   }
-
   if (vers == "bound") {
-    if (is.null(b)) b <- OasisR::boundaries(spatobj = spatobj, folder = folder, shape = shape)
+    if (is.null(b))
+      b <- OasisR::boundaries(spatobj = spatobj, folder = folder, shape = shape)
     if (is.null(w)) w <- b
-    xsmat <- matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE) /
-      (matrix(rep(t(x), length(x)), nrow = length(x), byrow = TRUE) +
-         matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE))
-    asmat <-  matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE) /
-      (matrix(rep(t(a), length(a)), nrow = length(a), byrow = TRUE) +
-         matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE))
-    smat <- w * abs(xsmat-asmat)
+    xsmat <- matrix(rep(t(x), length(x)), nrow = length(x),
+                    byrow = FALSE)/(matrix(rep(t(x), length(x)), nrow = length(x),
+                                           byrow = TRUE) + matrix(rep(t(x), length(x)), nrow = length(x),
+                                                                  byrow = FALSE))
+    asmat <- matrix(rep(t(a), length(a)), nrow = length(a),
+                    byrow = FALSE)/(matrix(rep(t(a), length(a)), nrow = length(a),
+                                           byrow = TRUE) + matrix(rep(t(a), length(a)), nrow = length(a),
+                                                                  byrow = FALSE))
+    smat <- w * abs(xsmat - asmat)
     smat[is.na(smat)] <- 0
-    return((0.5 * sum(abs((x/sum(x)) - (a/sum(a)))))- sum(smat)/sum(b))
+    return((0.5 * sum(abs((x/sum(x)) - (a/sum(a))))) - sum(smat)/sum(b))
   }
-
   if (vers == "shape") {
-    if (is.null(b)) b <- OasisR::boundaries(spatobj = spatobj, folder = folder, shape = shape)
-    if (is.null(ar)) ar <- OasisR::area(spatobj = spatobj, folder = folder, shape = shape)
-    if (is.null(per)){
-      if (ptype == "all") per <- OasisR::perimeter(spatobj = spatobj, folder = folder, shape = shape)
-      if (ptype == "int") per <- rowSums(b)
+    if (is.null(b))
+      b <- OasisR::boundaries(spatobj = spatobj, folder = folder,
+                              shape = shape)
+    if (is.null(ar))
+      ar <- OasisR::area(spatobj = spatobj, folder = folder,
+                         shape = shape)
+    if (is.null(per)) {
+      if (ptype == "all")
+        per <- OasisR::perimeter(spatobj = spatobj,
+                                 folder = folder, shape = shape)
+      if (ptype == "int")
+        per <- rowSums(b)
     }
-    w <- b * (matrix(rep(t(per/ar), length(x)), nrow = length(x), byrow = TRUE) +
-                matrix(rep(t(per/ar), length(x)), nrow = length(x), byrow = FALSE)) /
-      (2 * max(per/ar))
-    xsmat <- matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE) /
-      (matrix(rep(t(x), length(x)), nrow = length(x), byrow = TRUE) +
-         matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE))
-    asmat <-  matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE) /
-      (matrix(rep(t(a), length(a)), nrow = length(a), byrow = TRUE) +
-         matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE))
-    smat <- w * abs(xsmat-asmat)
+    w <- b * (matrix(rep(t(per/ar), length(x)), nrow = length(x),
+                     byrow = TRUE) + matrix(rep(t(per/ar), length(x)),
+                                            nrow = length(x), byrow = FALSE))/(2 * max(per/ar))
+    xsmat <- matrix(rep(t(x), length(x)), nrow = length(x),
+                    byrow = FALSE)/(matrix(rep(t(x), length(x)), nrow = length(x),
+                                           byrow = TRUE) + matrix(rep(t(x), length(x)), nrow = length(x),
+                                                                  byrow = FALSE))
+    asmat <- matrix(rep(t(a), length(a)), nrow = length(a),
+                    byrow = FALSE)/(matrix(rep(t(a), length(a)), nrow = length(a),
+                                           byrow = TRUE) + matrix(rep(t(a), length(a)), nrow = length(a),
+                                                                  byrow = FALSE))
+    smat <- w * abs(xsmat - asmat)
     smat[is.na(smat)] <- 0
-    return((0.5 * sum(abs((x/sum(x)) - (a/sum(a)))))- sum(smat)/sum(b))
+    return((0.5 * sum(abs((x/sum(x)) - (a/sum(a))))) - sum(smat)/sum(b))
   }
   if (K > 1 & vers == "contig") {
     if (is.null(w)) {
-      if (is.null(spatobj)) spatobj <- rgdal::readOGR(dsn = folder, layer = shape)
+      if (is.null(spatobj)) spatobj <- sf::st_read(dsn = folder, layer = shape) else spatobj <- sf::st_as_sf(spatobj)
       ngb <- spdep::poly2nb(spatobj, queen = queen)
-      ngbk<-spdep::nblag(ngb, K)
+      ngbk <- spdep::nblag(ngb, K)
       w <- vector("list", K)
-      for (k in 1:K)
-        w[[k]] <- spdep::nb2mat(ngbk[[k]], style = "B", zero.policy = TRUE)
+      for (k in 1:K) w[[k]] <- spdep::nb2mat(ngbk[[k]],
+                                             style = "B", zero.policy = TRUE)
     }
     result <- (0.5 * sum(abs((x/sum(x)) - (a/sum(a)))))
     k <- 1
     cond <- TRUE
-    while (cond){
-      if (f == "exp") interact <- exp(beta*(1-k))
-      if (f == "rec") interact <- 1/(k^beta)
-      xsmat <- matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE) /
-        (matrix(rep(t(x), length(x)), nrow = length(x), byrow = TRUE) +
-           matrix(rep(t(x), length(x)), nrow = length(x), byrow = FALSE))
-      asmat <-  matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE) /
-        (matrix(rep(t(a), length(a)), nrow = length(a), byrow = TRUE) +
-           matrix(rep(t(a), length(a)), nrow = length(a), byrow = FALSE))
-      smat <- w[[k]] * abs(xsmat-asmat)
+    while (cond) {
+      if (f == "exp")
+        interact <- exp(beta * (1 - k))
+      if (f == "rec")
+        interact <- 1/(k^beta)
+      xsmat <- matrix(rep(t(x), length(x)), nrow = length(x),
+                      byrow = FALSE)/(matrix(rep(t(x), length(x)),
+                                             nrow = length(x), byrow = TRUE) + matrix(rep(t(x),
+                                                                                          length(x)), nrow = length(x), byrow = FALSE))
+      asmat <- matrix(rep(t(a), length(a)), nrow = length(a),
+                      byrow = FALSE)/(matrix(rep(t(a), length(a)),
+                                             nrow = length(a), byrow = TRUE) + matrix(rep(t(a),
+                                                                                          length(a)), nrow = length(a), byrow = FALSE))
+      smat <- w[[k]] * abs(xsmat - asmat)
       smat[is.na(smat)] <- 0
-      result <- result - interact*sum(smat)/sum(w[[k]])
+      result <- result - interact * sum(smat)/sum(w[[k]])
       k <- k + 1
-      if (k > K) cond <- FALSE
+      if (k > K)
+        cond <- FALSE
     }
     return(result)
   }
@@ -215,25 +234,25 @@ EDfunc <- function(x, a, vers = "standard", w = NULL, ar = NULL, per = NULL, b =
 #' # segdata - theoretical distributions on a 10x10 grid map
 #' # We consider A1 and A2 - two populations distribution and
 #' # the amenities are located in the grid center
-#' distance <- rgeos::gDistance(rgeos::gCentroid(segdata, byid = FALSE),
-#' rgeos::gCentroid(segdata, byid = TRUE), byid = TRUE)
+#' distance <- sf::st_distance(sf::st_centroid(sf::st_as_sf(segdata)),
+#' sf::st_centroid(sf::st_union(sf::st_as_sf(segdata))))
 #' ECfunc (segdata@data[,3:4], dist = distance)
 #' @seealso \code{\link{EDfunc}}, \code{\link{EnvResampleTest}},
 #' \code{\link{EnvResamplePlot}}
 #' @export
 
-ECfunc  <- function(x, distmin = NULL, dist = NULL, K = NULL, kdist = NULL,
-                    spatobj1 = NULL, folder1 = NULL, shape1 = NULL,
-                    spatobj2 = NULL, folder2 = NULL, shape2 = NULL) {
+ECfunc <- function (x, distmin = NULL, dist = NULL, K = NULL, kdist = NULL,
+                    spatobj1 = NULL, folder1 = NULL, shape1 = NULL, spatobj2 = NULL,
+                    folder2 = NULL, shape2 = NULL)
+{
   x <- as.matrix(x)
   if (is.null(distmin)) {
     if (is.null(dist)) {
-      if (is.null(spatobj1))
-        spatobj1 <- rgdal::readOGR(dsn = folder1, layer = shape1)
-      if (is.null(spatobj2))
-        spatobj2 <- rgdal::readOGR(dsn = folder2, layer = shape2)
-      dist <- rgeos::gDistance(rgeos::gCentroid(spatobj2, byid = TRUE),
-                               rgeos::gCentroid(spatobj1, byid = TRUE), byid = TRUE)
+      if (is.null(spatobj1)) spatobj1 <- sf::st_read(dsn = folder1, layer = shape1) else spatobj1 <- sf::st_as_sf(spatobj1)
+      if (is.null(spatobj2)) spatobj2 <- sf::st_read(dsn = folder2, layer = shape2) else spatobj2 <- sf::st_as_sf(spatobj2)
+      centroids1 <- sf::st_centroid(spatobj1)
+      dist <- sf::st_distance(centroids1, spatobj2)
+      units(dist) <- NULL
     }
     distmin <- vector(length = nrow(dist))
     for (i in 1:nrow(dist)) distmin[i] <- min(dist[i, 1:ncol(dist)])
@@ -242,10 +261,9 @@ ECfunc  <- function(x, distmin = NULL, dist = NULL, K = NULL, kdist = NULL,
   varTotal <- colSums(x)
   xprovi <- cbind(x, distmin)
   xprovi <- as.data.frame(xprovi[order(xprovi[, ncol(xprovi)]), ])
-  xprovi2 <- xprovi[1:length(unique(xprovi$distmin)),]
+  xprovi2 <- xprovi[1:length(unique(xprovi$distmin)), ]
   xprovi2$distmin <- unique(xprovi$distmin)
-  for (i in 1:ncol(x))
-    xprovi2[,i] <- tapply(xprovi[,i], xprovi$distmin, sum)
+  for (i in 1:ncol(x)) xprovi2[, i] <- tapply(xprovi[, i], xprovi$distmin, sum)
   xprovi <- xprovi2
   if (is.null(K) & is.null(kdist)) {
     for (k1 in 1:ncol(x)) for (k2 in 1:ncol(x)) {
@@ -256,37 +274,42 @@ ECfunc  <- function(x, distmin = NULL, dist = NULL, K = NULL, kdist = NULL,
       result[k1, k2] <- XI1 %*% YI - XI %*% YI1
     }
     return(result)
-  } else {
+  }
+  else {
     if (!is.null(K)) {
-      if (K >= nrow(xprovi2)) K <- nrow(xprovi2)-1
-      xprovi <- xprovi[1:(K+1),]
+      if (K >= nrow(xprovi2))
+        K <- nrow(xprovi2) - 1
+      xprovi <- xprovi[1:(K + 1), ]
     }
-    if (!is.null(kdist)) xprovi <- xprovi[xprovi$distmin <= kdist,]
+    if (!is.null(kdist))
+      xprovi <- xprovi[xprovi$distmin <= kdist, ]
     xprovi <- xprovi[, -ncol(xprovi)]
     test <- TRUE
     varTotal <- colSums(xprovi)
-    if (sum(varTotal) == 0) test <- FALSE
-    for (i in length(varTotal))
-      if (varTotal[i] == 0 & sum(varTotal)>0) {
-        test <- FALSE
-        for (j in 1:length(varTotal)) {
-          result[j, i] <- 1
-          result[i, j] <- -1
-        }
+    if (sum(varTotal) == 0)
+      test <- FALSE
+    for (i in length(varTotal)) if (varTotal[i] == 0 & sum(varTotal) > 0) {
+      test <- FALSE
+      for (j in 1:length(varTotal)) {
+        result[j, i] <- 1
+        result[i, j] <- -1
       }
-    if (nrow(xprovi) <= 1) test <- FALSE
+    }
+    if (nrow(xprovi) <= 1)
+      test <- FALSE
     if (test)
       for (k1 in 1:ncol(x)) for (k2 in 1:ncol(x)) {
-        XI1 <- cumsum(xprovi[, k1])[1:(nrow(xprovi) - 1)]/varTotal[k1]
+        XI1 <- cumsum(xprovi[, k1])[1:(nrow(xprovi) -
+                                         1)]/varTotal[k1]
         XI <- cumsum(xprovi[, k1])[2:nrow(xprovi)]/varTotal[k1]
-        YI1 <- cumsum(xprovi[, k2])[1:(nrow(xprovi) - 1)]/varTotal[k2]
+        YI1 <- cumsum(xprovi[, k2])[1:(nrow(xprovi) -
+                                         1)]/varTotal[k2]
         YI <- cumsum(xprovi[, k2])[2:nrow(xprovi)]/varTotal[k2]
         result[k1, k2] <- XI1 %*% YI - XI %*% YI1
       }
     return(result)
   }
 }
-
 
 
 
@@ -447,7 +470,7 @@ EnvResampleTest <- function(x, a = NULL, fun, simtype = "MonteCarlo", nsim = NUL
       }
     }
     if (K > 1 & vers == "contig" & is.null(w)) {
-      if (is.null(spatobj)) spatobj <- rgdal::readOGR(dsn = folder, layer = shape)
+      if (is.null(spatobj)) spatobj <- sf::st_read(dsn = folder, layer = shape)
       ngb <- spdep::poly2nb(spatobj, queen = queen)
       ngbk<-spdep::nblag(ngb, K)
       w <- vector("list", K)
@@ -467,11 +490,12 @@ EnvResampleTest <- function(x, a = NULL, fun, simtype = "MonteCarlo", nsim = NUL
     if (is.null(distmin)) {
       if (is.null(dist)) {
         if (is.null(spatobj1))
-          spatobj1 <- rgdal::readOGR(dsn = folder1, layer = shape1)
+          spatobj1 <- sf::st_read(dsn = folder1, layer = shape1)
         if (is.null(spatobj2))
-          spatobj2 <- rgdal::readOGR(dsn = folder2, layer = shape2)
-        dist <- rgeos::gDistance(rgeos::gCentroid(spatobj2, byid = TRUE),
-                                 rgeos::gCentroid(spatobj1, byid = TRUE), byid = TRUE)
+          spatobj2 <- sf::st_read(dsn = folder2, layer = shape2)
+        centroids1 <- sf::st_centroid(spatobj1)
+        dist <- sf::st_distance(centroids1, spatobj2)
+        units(dist) <- NULL
       }
       distmin <- vector(length = nrow(dist))
       for (i in 1:nrow(dist)) distmin[i] <- min(dist[i, 1:ncol(dist)])
