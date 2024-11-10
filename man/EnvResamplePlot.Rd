@@ -8,27 +8,27 @@ EnvResamplePlot(ResampleTest, var = 1,  coldist = "red", colind = "blue", legend
 legendpos = "top", cex.legend = 1, bty = "o")
 }
 \arguments{
-\item{ResampleTest}{- a ResampleTest object produced with ResampleTest function}
+\item{ResampleTest}{a ResampleTest object produced with ResampleTest function}
 
-\item{var}{- the number of the variable to be plot}
+\item{var}{the number of the variable to be plot}
 
-\item{coldist}{- color used to plot the simulated distribution}
+\item{coldist}{color used to plot the simulated distribution}
 
-\item{colind}{- color used to plot the index}
+\item{colind}{color used to plot the index}
 
-\item{legend}{- logical parameter, to control the legend's plots}
+\item{legend}{logical parameter, to control the legend's plots}
 
-\item{legendpos}{- a character string giving the legend's position: 'bottomright', 'bottom',
+\item{legendpos}{a character string giving the legend's position: 'bottomright', 'bottom',
 'bottomleft', 'left', 'topleft', 'top', 'topright', 'right' and 'center'.}
 
-\item{cex.legend}{- a numerical value giving the amount by which plotting text and symbols
+\item{cex.legend}{a numerical value giving the amount by which plotting text and symbols
 in legend should be magnified relative to the default.}
 
-\item{bty}{- a character string which determines the type of box of the legend:
+\item{bty}{a character string which determines the type of box of the legend:
 'o' (by default), 'l', '7', 'c', 'u', or ']'}
 }
 \value{
-A plot with resampling distribution
+A plot with resampling theoretical distribution
 corresponding upper case letter. A value of 'n' suppresses the box.
 }
 \description{

@@ -4,58 +4,58 @@
 \alias{EDfunc}
 \title{A function to compute environmental dissimilarity index}
 \usage{
-EDfunc (x, a, vers = "standard", w = NULL, ar = NULL, per = NULL,
+EDfunc(x, a, vers = "standard", w = NULL, ar = NULL, per = NULL,
 b = NULL, folder = NULL, shape = NULL, spatobj = NULL, queen = TRUE,
 ptype = "int", K = 1, f = "exp", beta = 1)
 }
 \arguments{
-\item{x}{- a vector of the population/group distribution across spatial units}
+\item{x}{a vector of the population/group distribution across spatial units}
 
-\item{a}{- a vector of the environmental variable spatial distribution}
+\item{a}{a vector of the environmental variable spatial distribution}
 
-\item{vers}{- the index version:
+\item{vers}{the index version:
 "standard" (by default) for aspatial environmental dissimilarity index (Duncan);
 "contig" for adjusted index with a contiguity spatial interactions matrix (Morrill);
 "bound" for adjusted index with a boundaries spatial interactions matrix (Wong);
 "shape" for adjusted index with a boundaries and shape spatial interactions matrix (Wong);
 "user" for adjusted index with any user spatial interactions matrix}
 
-\item{w}{- an optional spatial weights matrix.
+\item{w}{an optional spatial weights matrix.
 If necessary and not provided, it will be computed in the function}
 
-\item{ar}{- an optional vector of spatial units area.
+\item{ar}{an optional vector of spatial units area.
 If necessary and not provided, it will be computed in the function}
 
-\item{per}{- an optional vector of spatial units perimeter.
+\item{per}{an optional vector of spatial units perimeter.
 If necessary and not provided, it will be computed in the function.}
 
-\item{b}{- an optional shared border matrix.
+\item{b}{an optional shared border matrix.
 If necessary and not provided, it will be computed in the function.}
 
-\item{folder}{- a character vector with the folder (directory) name
+\item{folder}{a character vector with the folder (directory) name
 indicating where the shapefile with geographical info is located on the drive
 if the interactions matrix is computed in the function}
 
-\item{shape}{- a character vector with the name of the shapefile
+\item{shape}{a character vector with the name of the shapefile
 (without the .shp extension)}
 
-\item{spatobj}{- a spatial object (SpatialPolygonsDataFrame) with
+\item{spatobj}{a spatial object (SpatialPolygonsDataFrame) with
 geographic information as alternative for the shapefile,
 if the interactions matrix is computed in the function}
 
-\item{queen}{- logical parameter defining criteria used for contiguity matrix computation,
+\item{queen}{logical parameter defining criteria used for contiguity matrix computation,
 TRUE for queen (by default), FALSE  for rook}
 
-\item{ptype}{- a string variable giving two options for perimeter calculation for  Wong's indices:
+\item{ptype}{a string variable giving two options for perimeter calculation for  Wong's indices:
 "int" to use only interior borders of spatial units and
 "all" to use entire borders, including to the exterior of the area}
 
-\item{K}{- the order of contiguity matrix if "contig" version is chosen (K = 1 by default)}
+\item{K}{the order of contiguity matrix if "contig" version is chosen (K = 1 by default)}
 
-\item{f}{- spatial decay function of contiguity matrix when K > 1, with
+\item{f}{spatial decay function of contiguity matrix when K > 1, with
 f = "exp" (by default) for exponential function of contiguity "distance" exp(beta*(1-k))}
 
-\item{beta}{- spatial decay intensity parameter (equal to 1 by default),
+\item{beta}{spatial decay intensity parameter (equal to 1 by default),
 used only when the version with contiguity is chosen and K > 1}
 }
 \value{
